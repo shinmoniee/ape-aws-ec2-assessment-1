@@ -1,4 +1,4 @@
-# EC2 Assessment 1: SRE Drill for EC2 Performance Degradation  
+# AWS EC2 Assessment 1: SRE Drill for EC2 Performance Degradation  
 
 The application exposes one endpoint:
 
@@ -6,7 +6,7 @@ The application exposes one endpoint:
 GET /health
 ```
 
-When filesystem health is degraded, the endpoint returns HTTP `503`:
+When EC2 system health is degrade, the endpoint returns HTTP `503`:
 
 ```json
 {"status":"unhealthy"}
@@ -53,7 +53,7 @@ Clone the repository:
 
 ```bash
 git clone REPOSITORY_URL
-cd ape-ec2-assessment-1
+cd REPOSITORY_DIR
 ```
 
 Create the log directory:
