@@ -8,12 +8,12 @@ The cause turned out to be disk space. The app was writing continuously to a sin
 
 ## Timeline (UTC)
 
-- **15:43** — App started via systemd. `/health` returns `200 healthy`.
-- **16:57** — Disk usage checked: already at 79%. Log folder alone measured 5.3 GB.
-- **17:22** — `/health` now returns `503 unhealthy` — first observed failure.
-- **17:30** — Disk fully exhausted: 100% used, 0 bytes free. Even `mkdir` failed with "No space left on device." Log folder had grown to 7.3 GB.
-- **17:33** — Log file cleared with `truncate` to restore service. Disk usage dropped to 28%, and `/health` returned to `200 healthy` immediately.
-- **17:36–17:40** — Log rotation configured and verified. Disk usage stabilized around 25%.
+- **15:43** : App started via systemd. `/health` returns `200 healthy`.
+- **16:57** : Disk usage checked: already at 79%. Log folder alone measured 5.3 GB.
+- **17:22** : `/health` now returns `503 unhealthy` — first observed failure.
+- **17:30** : Disk fully exhausted: 100% used, 0 bytes free. Even `mkdir` failed with "No space left on device." Log folder had grown to 7.3 GB.
+- **17:33** : Log file cleared with `truncate` to restore service. Disk usage dropped to 28%, and `/health` returned to `200 healthy` immediately.
+- **17:36–17:40** : Log rotation configured and verified. Disk usage stabilized around 25%.
 
 From a healthy start to full disk exhaustion took under two hours driven entirely by uncontrolled log growth.
 
@@ -47,10 +47,10 @@ A `logrotate` configuration was added at `/etc/logrotate.d/storage-breaker`:
     copytruncate
 }
 ```
-- `size 100M` — rotates once the log hits 100 MB, rather than waiting on a fixed schedule
-- `rotate 3` — keeps only the 3 most recent rotated copies
-- `compress` — gzips old logs to save space
-- `copytruncate` — rotates in place without needing to restart the running Uvicorn process
+- `size 100M` : rotates once the log hits 100 MB, rather than waiting on a fixed schedule
+- `rotate 3` : keeps only the 3 most recent rotated copies
+- `compress` : gzips old logs to save space
+- `copytruncate` : rotates in place without needing to restart the running Uvicorn process
 
 One thing worth calling out: `logrotate` runs once a day by default via cron. That's far too infrequent here that the app can generate 100+ MB of logs within minutes, so a daily check would never catch it in time. A dedicated cron entry was added instead to run logrotate every 5 minutes:
 ```
