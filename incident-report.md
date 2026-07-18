@@ -15,7 +15,7 @@ The cause turned out to be disk space. The app was writing continuously to a sin
 - **17:33** — Log file cleared with `truncate` to restore service. Disk usage dropped to 28%, and `/health` returned to `200 healthy` immediately.
 - **17:36–17:40** — Log rotation configured and verified. Disk usage stabilized around 25%.
 
-From a healthy start to full disk exhaustion took under two hours — driven entirely by uncontrolled log growth.
+From a healthy start to full disk exhaustion took under two hours driven entirely by uncontrolled log growth.
 
 ## Root cause
 
@@ -23,9 +23,9 @@ The app logged everything to one file with no rotation, retention, or size limit
 
 ## Detection
 
-The issue was caught through manual checks — polling `/health` with `curl` and checking disk usage with `df -h` at intervals. No automated alerting was configured for this drill.
+The issue was caught through manual checks by polling `/health` with `curl` and checking disk usage with `df -h` at intervals. No automated alerting was configured for this drill.
 
-One notable finding: **EC2's built-in status checks did not detect this at all.** Those checks only verify that the instance is reachable and the OS is responsive — they have no visibility into disk usage. Even while the app was actively returning `503 unhealthy`, the EC2 console's status checks would most likely have continued showing the instance as healthy. This highlights a real gap between "the infrastructure is up" and "the application is actually functioning" — infrastructure-level checks and application-level health checks are not the same thing, and relying on only one can miss real problems.
+One notable finding: **EC2's built-in status checks did not detect this at all.** Those checks only verify that the instance is reachable and the OS is responsive that they have no visibility into disk usage. Even while the app was actively returning `503 unhealthy`, the EC2 console's status checks would most likely have continued showing the instance as healthy. This highlights a real gap between "the infrastructure is up" and "the application is actually functioning" : infrastructure-level checks and application-level health checks are not the same thing, and relying on only one can miss real problems.
 
 ## Resolution
 
@@ -52,7 +52,7 @@ A `logrotate` configuration was added at `/etc/logrotate.d/storage-breaker`:
 - `compress` — gzips old logs to save space
 - `copytruncate` — rotates in place without needing to restart the running Uvicorn process
 
-One thing worth calling out: `logrotate` runs once a day by default via cron. That's far too infrequent here — the app can generate 100+ MB of logs within minutes, so a daily check would never catch it in time. A dedicated cron entry was added instead to run logrotate every 5 minutes:
+One thing worth calling out: `logrotate` runs once a day by default via cron. That's far too infrequent here that the app can generate 100+ MB of logs within minutes, so a daily check would never catch it in time. A dedicated cron entry was added instead to run logrotate every 5 minutes:
 ```
 */5 * * * * /usr/sbin/logrotate /etc/logrotate.d/storage-breaker
 ```
@@ -62,7 +62,7 @@ One thing worth calling out: `logrotate` runs once a day by default via cron. Th
 ## Lessons learned
 
 - Application-level health checks can catch failures that infrastructure-level checks completely miss. EC2 status checks and default CloudWatch metrics wouldn't have flagged this incident at all.
-- Log rotation intervals need to match the actual write rate of the application — a default daily schedule is not universal and can be dangerously slow for high-volume logging.
+- Log rotation intervals need to match the actual write rate of the application. A default daily schedule is not universal and can be dangerously slow for high-volume logging.
 - Small root volumes (10 GiB) leave very little margin for unbounded log growth; either a larger/dedicated log volume or more aggressive rotation is needed for anything log-heavy.
 - Manual polling worked for this drill, but a production setup would benefit from the CloudWatch Agent tracking `disk_used_percent` with a proper alarm, instead of relying on someone checking manually.
 
